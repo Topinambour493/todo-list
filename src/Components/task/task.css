@@ -1,0 +1,45 @@
+.taskCard{
+    border: black 1px solid;
+    margin:5px;
+    display: flex;
+    flex-direction: row;
+}
+
+.nameTaskCard{
+    background-color: #ffe7b1;
+    padding: 5px;
+}
+
+.deleteTaskCard{
+    background-color: red;
+    color: whitesmoke;
+    padding: 5px;
+}
+
+.statusTaskCard{
+    padding: 5px;
+}
+
+.faire{
+    background-color: #f34e4e;
+}
+
+.fait{
+    background-color: #00ff00;
+}
+
+.cours{
+    background-color: orange;
+}
+
+.editTaskCard{
+    display: flex;
+    justify-content: center;
+    padding: 5px;
+    flex-direction: column;
+    background-color: #61dafb;
+}
+
+button{
+    cursor: pointer;
+}
