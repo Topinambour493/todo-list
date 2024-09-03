@@ -136,12 +136,12 @@ const TaskManager = () => {
       <div id={"tasksCard"}>
         {tasks.map((task: TaskId, index) => (
           <TaskCard key={index} id={task.id} onDelete={onTaskDelete} onEdit={onTaskEdit} status={task.status}
-                    name={task.name}/>
-        ))}
-      </div>
-    </div>
-  )
-    ;
-}
+                    name={task.name} />
+            ))}
+          </div>
+          </div>
+          )
+          ;
+        }
 
-export default TaskManager;
+        export default TaskManager;
