@@ -1,0 +1,29 @@
+#login{
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+}
+
+#containerLogin{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.inputLogin{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    width: fit-content;
+}
+
+#login form{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+#login form > * {
+    padding: 5px;
+}

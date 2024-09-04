@@ -5,6 +5,17 @@
     align-items: center;
 }
 
+#taskManager{
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+#taskManager > * {
+    padding: 5px;
+}
+
 select{
     cursor: pointer;
 }

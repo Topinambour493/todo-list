@@ -1,14 +1,26 @@
 import React, {ChangeEvent, useEffect, useState} from 'react';
 import TaskCard from "../task/task";
-import {Task, TaskId} from "../../models";
+import {InitialDnDState, Task, TaskId} from "../../models";
 import "./taskManager.css"
+import {useNavigate} from "react-router-dom";
 
+
+const initialDnDState: InitialDnDState = {
+  draggedFrom: 0,
+  draggedTo: 0,
+  isDragging: false,
+  originalOrder: [],
+  updatedOrder: []
+}
 
 const TaskManager = () => {
+  let navigate = useNavigate()
   let [nameNewTask, setNameNewTask] = useState<string>("")
   let [statusNewTask, setStatusNewTask] = useState<string>("a faire")
   let [statusFilter, setStatusFilter] = useState<string>("tout")
   let [tasks, setTasks] = useState<TaskId[]>([])
+  let [dragAndDrop, setDragAndDrop] = React.useState(initialDnDState);
+
 
   function resetNewTask() {
     setNameNewTask("")
@@ -53,7 +65,6 @@ const TaskManager = () => {
       alert('Failed to get tasks');
     }
   }
-
   async function filterTask(statusFilter: string = "tout") {
     try {
       const response = await fetch('http://localhost:3001/tasks', {
@@ -76,6 +87,84 @@ const TaskManager = () => {
     } catch (error) {
       console.error('Error:', error);
     }
+  }
+
+  const onDragStart = (event: any) => {
+    const initialPosition = Number(event.currentTarget.dataset.position);
+
+    setDragAndDrop({
+      ...dragAndDrop,
+      draggedFrom: initialPosition,
+      isDragging: true,
+      originalOrder: tasks
+    });
+
+    const dragPreview = event.currentTarget.parentElement;
+
+
+    // Utilisation de setDragImage pour définir l'image flottante
+    event.dataTransfer.setDragImage(dragPreview, 50, 25);
+
+    // Note: this is only for Firefox.
+    // Without it, the DnD won't work.
+    // But we are not using it.
+    event.dataTransfer.setData("text/html", '');
+  }
+
+  // onDragOver fires when an element being dragged
+  // enters a droppable area.
+  // In this case, any of the items on the list
+  const onDragOver = (event: any) => {
+
+    // in order for the onDrop
+    // event to fire, we have
+    // to cancel out this one
+    event.preventDefault();
+
+    let newTasks: TaskId[] = dragAndDrop.originalOrder;
+
+    // index of the item being dragged
+    const draggedFrom = dragAndDrop.draggedFrom;
+
+    // index of the droppable area being hovered
+    const draggedTo = Number(event.currentTarget.dataset.position);
+
+    const itemDragged = newTasks[draggedFrom];
+    const remainingItems = newTasks.filter((item, index) => index !== draggedFrom);
+
+    newTasks = [
+      ...remainingItems.slice(0, draggedTo),
+      itemDragged,
+      ...remainingItems.slice(draggedTo)
+    ];
+
+    if (draggedTo !== dragAndDrop.draggedTo){
+      setDragAndDrop({
+        ...dragAndDrop,
+        updatedOrder: newTasks,
+        draggedTo: draggedTo
+      })
+    }
+
+  }
+
+  const onDrop = () => {
+
+    setTasks(dragAndDrop.updatedOrder);
+
+    setDragAndDrop({
+      ...dragAndDrop,
+      draggedFrom: 0,
+      draggedTo: 0,
+      isDragging: false
+    });
+  }
+
+  const onDragLeave = () => {
+    setDragAndDrop({
+      ...dragAndDrop,
+      draggedTo: 0
+    });
 
   }
 
@@ -106,7 +195,8 @@ const TaskManager = () => {
   }, [statusFilter])
 
   return (
-    <div>
+    <div id={"taskManager"}>
+      <button onClick={()=>navigate('/')}>Déconnexion</button>
       <form onSubmit={createNewTask}>
         <label>Nom de la nouvelle tache: </label>
         <input type={"text"} onChange={(e: ChangeEvent<HTMLInputElement>) => setNameNewTask(e.target.value)}
@@ -136,7 +226,13 @@ const TaskManager = () => {
       <div id={"tasksCard"}>
         {tasks.map((task: TaskId, index) => (
           <TaskCard key={index} id={task.id} onDelete={onTaskDelete} onEdit={onTaskEdit} status={task.status}
-                    name={task.name} />
+                    name={task.name}
+                    indexPosition={index}
+                    onDragStart={onDragStart}
+                    onDragOver={onDragOver}
+                    onDrop={onDrop}
+                    onDragLeave={onDragLeave}
+            />
             ))}
           </div>
           </div>

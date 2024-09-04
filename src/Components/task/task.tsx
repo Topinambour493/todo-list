@@ -4,7 +4,7 @@ import "./task.css"
 import edition from "../../images/edit.png"
 import valid from "../../images/valid.png"
 
-const TaskCard: React.FC<TaskEdit> = ({name = "", status = "a faire", id, onDelete, onEdit}) => {
+const TaskCard: React.FC<TaskEdit> = ({name = "", status = "a faire", id, onDelete, onEdit, onDragOver, onDragStart, draggable, onDrop, indexPosition}) => {
 
   let [editName, setEditName] = useState(name)
   let [editStatus, setEditStatus] = useState(status)
@@ -49,6 +49,7 @@ const TaskCard: React.FC<TaskEdit> = ({name = "", status = "a faire", id, onDele
 
         <img src={edit ? valid : edition}/>
       </button>
+      <div className={"moveTaskCard"} data-position={indexPosition} onDragOver={onDragOver} onDragStart={onDragStart} onDrop={onDrop} draggable={true}>move</div>
     </div>
   )
     ;

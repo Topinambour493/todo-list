@@ -1,14 +1,17 @@
-import React from 'react';
-import logo from './logo.svg';
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import './App.css';
 import TaskManager from "./Components/taskManager/taskManager";
+import Login from "./Components/login/login";
 
-function App() {
+export default function App() {
   return (
-    <div className="App">
-      <TaskManager/>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />}/>
+        <Route path="/tasklist" element={<TaskManager />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
-export default App;

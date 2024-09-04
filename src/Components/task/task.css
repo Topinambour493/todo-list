@@ -43,3 +43,7 @@
 button{
     cursor: pointer;
 }
+
+.moveTaskCard{
+    cursor: move;
+}
