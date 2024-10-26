@@ -3,8 +3,12 @@ import {TaskEdit} from "../../models";
 import "./task.css"
 import edition from "../../images/edit.png"
 import valid from "../../images/valid.png"
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faBars, faXmark, faPenToSquare, faCheck} from "@fortawesome/free-solid-svg-icons";
 
-const TaskCard: React.FC<TaskEdit> = ({name = "", status = "a faire", _id, onDelete, onEdit, onDragOver, onDragStart, draggable, onDrop, priority}) => {
+
+
+const TaskCard: React.FC<TaskEdit> = ({name = "", status = "a faire", _id, onDelete, onEdit, onDragStart, draggable, onDrop, priority}) => {
 
   let [editName, setEditName] = useState(name)
   let [editStatus, setEditStatus] = useState(status)
@@ -19,13 +23,20 @@ const TaskCard: React.FC<TaskEdit> = ({name = "", status = "a faire", _id, onDel
     setEdit(!edit)
   }
 
+  function dragOver(event: React.DragEvent<HTMLDivElement>){
+    event.preventDefault();
+  }
+
+  function dragEnd(event: React.DragEvent<HTMLDivElement>){
+    event.currentTarget.style.opacity=""
+  }
   function resetEdit(){
     setEditName(name)
     setEditStatus(status)
   }
 
   return (
-    <div className={"taskCard"} id={_id}>
+    <div className={"taskCard"} id={_id} onDrop={onDrop} onDragOver={(e: React.DragEvent<HTMLDivElement>)=>dragOver(e)} onDragEnd={(e: React.DragEvent<HTMLDivElement>)=> dragEnd(e)}>
       {edit ? (
         <div className={"editTaskCard"}>
           <input className={"nameTaskCard"} onChange={(e) => setEditName(e.target.value)} value={editName}></input>
@@ -44,15 +55,13 @@ const TaskCard: React.FC<TaskEdit> = ({name = "", status = "a faire", _id, onDel
       )}
       <button className={"deleteTaskCard"} onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
         let a = e.currentTarget.parentElement
-        console.log("ici", _id)
         onDelete(_id);
-      }}>x
+      }}><FontAwesomeIcon icon={faXmark}/>
       </button>
       <button className={"editTaskCard"} onClick={(e)=>changeEdit(e)}>
-
-        <img src={edit ? valid : edition}/>
+        <FontAwesomeIcon icon={edit ? faCheck : faPenToSquare}/>
       </button>
-      <div className={"moveTaskCard"} data-position={priority} onDragOver={onDragOver} onDragStart={onDragStart} onDrop={onDrop} draggable={true}>move</div>
+      <div className={"moveTaskCard"} data-position={priority} onDragStart={onDragStart} draggable={true}><FontAwesomeIcon icon={faBars}/></div>
     </div>
   )
     ;

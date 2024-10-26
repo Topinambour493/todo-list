@@ -19,8 +19,7 @@ const TaskManager = () => {
   let [statusNewTask, setStatusNewTask] = useState<string>("a faire")
   let [statusFilter, setStatusFilter] = useState<string>("tout")
   let [tasks, setTasks] = useState<TaskId[]>([])
-  let [dragAndDrop, setDragAndDrop] = useState(initialDnDState);
-  let [itemDragged, setItemDragged] = useState<TaskId>({priority: 0, name: "", status: "", _id: ""})
+  let [itemIdDragged, setItemIdDragged] = useState("")
 
 
   function resetNewTask() {
@@ -88,17 +87,11 @@ const TaskManager = () => {
   }
 
   const onDragStart = (event: any) => {
-    setItemDragged(event.currentTarget.parentElement.id);
-
-    setDragAndDrop({
-      ...dragAndDrop,
-      isDragging: true,
-      originalOrder: tasks
-    });
+    setItemIdDragged(event.currentTarget.parentElement.id);
 
     const dragPreview = event.currentTarget.parentElement;
 
-
+    event.target.parentElement.style.opacity = 0.5;
     // Utilisation de setDragImage pour définir l'image flottante
     event.dataTransfer.setDragImage(dragPreview, 50, 25);
 
@@ -108,50 +101,13 @@ const TaskManager = () => {
     event.dataTransfer.setData("text/html", '');
   }
 
-  // onDragOver fires when an element being dragged
-  // enters a droppable area.
-  // In this case, any of the items on the list
-  const onDragOver = (event: any) => {
-
-    // in order for the onDrop
-    // event to fire, we have
-    // to cancel out this one
-    event.preventDefault();
-
-    let newTasks: TaskId[] = dragAndDrop.originalOrder;
-
-    // index of the item being dragged
-    const draggedFrom = dragAndDrop.draggedFrom;
-
-    // index of the droppable area being hovered
-    const draggedTo = Number(event.currentTarget.dataset.position);
-
-    const remainingItems = newTasks.filter((item, index) => index !== draggedFrom);
-
-    newTasks = [
-      ...remainingItems.slice(0, draggedTo),
-      itemDragged,
-      ...remainingItems.slice(draggedTo)
-    ];
-
-    if (draggedTo !== dragAndDrop.draggedTo) {
-      setDragAndDrop({
-        ...dragAndDrop,
-        updatedOrder: newTasks,
-        draggedTo: draggedTo
-      })
-    }
-
-  }
-
   const onDrop = async (e: any) => {
-    let idTask: TaskId = itemDragged
-    let a = e.currentTarget
-    let previousPriority  = a.parentElement?.getElementsByClassName("moveTaskCard")[0].dataset.position
-    let nextPriority = a.parentElement.nextElementSibling?.getElementsByClassName("moveTaskCard")[0].dataset.position
+    let previousPriority  = e.currentTarget?.getElementsByClassName("moveTaskCard")[0].dataset.position
+    let nextPriority = e.currentTarget.nextElementSibling?.getElementsByClassName("moveTaskCard")[0].dataset.position
 
+    console.log(previousPriority, nextPriority)
     try {
-      const response = await fetch('http://localhost:3001/tasks/' + idTask + "/changePriority", {
+      const response = await fetch('http://localhost:3001/tasks/' + itemIdDragged + "/changePriority", {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -164,20 +120,6 @@ const TaskManager = () => {
     } catch (error) {
       console.error('Error:', error);
     }
-
-    setDragAndDrop({
-      ...dragAndDrop,
-      draggedFrom: 0,
-      draggedTo: 0,
-      isDragging: false
-    });
-  }
-
-  const onDragLeave = () => {
-    setDragAndDrop({
-      ...dragAndDrop,
-      draggedTo: 0
-    });
 
   }
 
@@ -268,9 +210,7 @@ const TaskManager = () => {
                       name={task.name}
                       priority={task.priority}
                       onDragStart={onDragStart}
-                      onDragOver={onDragOver}
                       onDrop={onDrop}
-                      onDragLeave={onDragLeave}
             />
           </>
 

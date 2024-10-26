@@ -20,9 +20,7 @@ export type TaskEdit = {
   onEdit: (taskId: TaskId) => void;
   draggable?: boolean;
   onDragStart: (e: any) => void;
-  onDragOver: (e: any) => void;
   onDrop: (e: any) => void;
-  onDragLeave: (e: any) => void;
   priority: number;
 }
 

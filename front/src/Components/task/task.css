@@ -46,4 +46,8 @@ button{
 
 .moveTaskCard{
     cursor: move;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    padding: 5px;
 }
