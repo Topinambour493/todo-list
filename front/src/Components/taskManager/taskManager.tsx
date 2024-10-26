@@ -19,18 +19,19 @@ const TaskManager = () => {
   let [statusNewTask, setStatusNewTask] = useState<string>("a faire")
   let [statusFilter, setStatusFilter] = useState<string>("tout")
   let [tasks, setTasks] = useState<TaskId[]>([])
-  let [dragAndDrop, setDragAndDrop] = React.useState(initialDnDState);
+  let [dragAndDrop, setDragAndDrop] = useState(initialDnDState);
+  let [itemDragged, setItemDragged] = useState<TaskId>({priority: 0, name: "", status: "", _id: ""})
 
 
   function resetNewTask() {
     setNameNewTask("")
   }
 
-  function createNewTask(e: React.SyntheticEvent) {
+  async function createNewTask(e: React.SyntheticEvent) {
     e.preventDefault()
     let newTask = {"name": nameNewTask, "status": statusNewTask}
-    addTask(newTask)
-    filterTask(statusFilter)
+    await addTask(newTask)
+    await filterTask(statusFilter)
 
     resetNewTask()
   }
@@ -46,12 +47,11 @@ const TaskManager = () => {
     const response = await fetch('http://localhost:3001/tasks/' + id, {
       method: 'DELETE',
     })
-    console.log('AAAAh', response);
-    filterTask(statusFilter)
+    await filterTask(statusFilter)
   }
 
   const onTaskEdit = async (task: TaskId) => {
-    const response = await fetch('http://localhost:3001/tasks/' + task.id, {
+    const response = await fetch('http://localhost:3001/tasks/' + task._id, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -59,12 +59,12 @@ const TaskManager = () => {
       body: JSON.stringify(task),
     })
     if (response.ok) {
-      console.log('AAAAh', response);
-      filterTask(statusFilter)
+      await filterTask(statusFilter)
     } else {
       alert('Failed to get tasks');
     }
   }
+
   async function filterTask(statusFilter: string = "tout") {
     try {
       const response = await fetch('http://localhost:3001/tasks', {
@@ -73,14 +73,12 @@ const TaskManager = () => {
           'Content-Type': 'application/json',
         },
       });
-      console.log(response)
       if (response.ok) {
         let tasksNonFiltered = await response.json()
         if (statusFilter === "tout")
           setTasks(tasksNonFiltered)
         else
           setTasks(tasksNonFiltered.filter((task: Task) => task.status === statusFilter))
-        console.log(tasks)
       } else {
         alert('Failed to get tasks');
       }
@@ -90,11 +88,10 @@ const TaskManager = () => {
   }
 
   const onDragStart = (event: any) => {
-    const initialPosition = Number(event.currentTarget.dataset.position);
+    setItemDragged(event.currentTarget.parentElement.id);
 
     setDragAndDrop({
       ...dragAndDrop,
-      draggedFrom: initialPosition,
       isDragging: true,
       originalOrder: tasks
     });
@@ -129,7 +126,6 @@ const TaskManager = () => {
     // index of the droppable area being hovered
     const draggedTo = Number(event.currentTarget.dataset.position);
 
-    const itemDragged = newTasks[draggedFrom];
     const remainingItems = newTasks.filter((item, index) => index !== draggedFrom);
 
     newTasks = [
@@ -138,7 +134,7 @@ const TaskManager = () => {
       ...remainingItems.slice(draggedTo)
     ];
 
-    if (draggedTo !== dragAndDrop.draggedTo){
+    if (draggedTo !== dragAndDrop.draggedTo) {
       setDragAndDrop({
         ...dragAndDrop,
         updatedOrder: newTasks,
@@ -148,9 +144,26 @@ const TaskManager = () => {
 
   }
 
-  const onDrop = () => {
+  const onDrop = async (e: any) => {
+    let idTask: TaskId = itemDragged
+    let a = e.currentTarget
+    let previousPriority  = a.parentElement?.getElementsByClassName("moveTaskCard")[0].dataset.position
+    let nextPriority = a.parentElement.nextElementSibling?.getElementsByClassName("moveTaskCard")[0].dataset.position
 
-    setTasks(dragAndDrop.updatedOrder);
+    try {
+      const response = await fetch('http://localhost:3001/tasks/' + idTask + "/changePriority", {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({priorityTaskPrevious: previousPriority, priorityTaskNext: nextPriority}),
+      });
+      if (response.ok) {
+        await filterTask(statusFilter)
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
 
     setDragAndDrop({
       ...dragAndDrop,
@@ -168,6 +181,30 @@ const TaskManager = () => {
 
   }
 
+  async function changePriorityTask(task: TaskId, priorityTask1: string, priorityTask2: string) {
+    try {
+      const response = await fetch('http://localhost:3001/tasks' + task._id + "/changePriority", {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({priorityTask1: priorityTask1, priorityTask2: priorityTask2}),
+        })
+      ;
+
+
+      if (response.ok) {
+        await filterTask(statusFilter)
+        resetNewTask()
+      } else {
+        alert('Failed to add task');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+
+
   async function addTask(newTask: Task) {
     try {
       const response = await fetch('http://localhost:3001/tasks', {
@@ -178,9 +215,9 @@ const TaskManager = () => {
         body: JSON.stringify(newTask),
       });
 
-      console.log(response);
 
       if (response.ok) {
+        await filterTask(statusFilter)
         resetNewTask()
       } else {
         alert('Failed to add task');
@@ -188,15 +225,15 @@ const TaskManager = () => {
     } catch (error) {
       console.error('Error:', error);
     }
-  };
+  }
 
   useEffect(() => {
-    filterTask(statusFilter)
+    filterTask(statusFilter).then()
   }, [statusFilter])
 
   return (
     <div id={"taskManager"}>
-      <button onClick={()=>navigate('/')}>Déconnexion</button>
+      <button onClick={() => navigate('/')}>Déconnexion</button>
       <form onSubmit={createNewTask}>
         <label>Nom de la nouvelle tache: </label>
         <input type={"text"} onChange={(e: ChangeEvent<HTMLInputElement>) => setNameNewTask(e.target.value)}
@@ -225,19 +262,23 @@ const TaskManager = () => {
       </select>
       <div id={"tasksCard"}>
         {tasks.map((task: TaskId, index) => (
-          <TaskCard key={index} id={task.id} onDelete={onTaskDelete} onEdit={onTaskEdit} status={task.status}
-                    name={task.name}
-                    indexPosition={index}
-                    onDragStart={onDragStart}
-                    onDragOver={onDragOver}
-                    onDrop={onDrop}
-                    onDragLeave={onDragLeave}
+          <>
+            {task.priority}
+            <TaskCard key={index} _id={task._id} onDelete={onTaskDelete} onEdit={onTaskEdit} status={task.status}
+                      name={task.name}
+                      priority={task.priority}
+                      onDragStart={onDragStart}
+                      onDragOver={onDragOver}
+                      onDrop={onDrop}
+                      onDragLeave={onDragLeave}
             />
-            ))}
-          </div>
-          </div>
-          )
-          ;
-        }
+          </>
 
-        export default TaskManager;
+        ))}
+      </div>
+    </div>
+  )
+    ;
+}
+
+export default TaskManager;
